@@ -1028,20 +1028,35 @@ class QuantumCircuit:
             CircuitError: if the circuit name, if given, is not valid.
             CircuitError: if both ``inputs`` and ``captures`` are given.
         """
+        MAX_REG_SIZE = 2 << 32 - 2
+
         if any(not isinstance(reg, (list, QuantumRegister, ClassicalRegister)) for reg in regs):
             # check if inputs are integers, but also allow e.g. 2.0
 
-            try:
-                valid_reg_size = all(reg == int(reg) for reg in regs)
-            except (ValueError, TypeError):
-                valid_reg_size = False
+            def assert_reg_is_valid(reg_in):
+                try:
+                    valid_reg_size = reg == int(reg)
+                except (ValueError, TypeError):
+                    valid_reg_size = False
+                if not valid_reg_size:
+                    raise CircuitError(
+                        "Circuit args must be Registers or integers. ("
+                        f"{[type(reg).__name__ for reg in regs]} '{regs}' was "
+                        "provided)"
+                    )
 
-            if not valid_reg_size:
-                raise CircuitError(
-                    "Circuit args must be Registers or integers. ("
-                    f"{[type(reg).__name__ for reg in regs]} '{regs}' was "
-                    "provided)"
-                )
+                try:
+                    valid_reg_count = reg <= MAX_REG_SIZE
+                except (ValueError, TypeError):
+                    valid_reg_count = False
+                if not valid_reg_count:
+                    raise CircuitError(
+                        f"Register size out of bounds (max size is {MAX_REG_SIZE})"
+                    )
+
+            for reg in regs:
+                assert_reg_is_valid(reg)
+
 
             regs = tuple(int(reg) for reg in regs)  # cast to int
         self._base_name = None
