@@ -5,7 +5,7 @@ on:
       - "v*.*.*"
 jobs:
   c-api-binary-linux:
-    name: "C API Binary / Linux"
+    name: "C API Binary / Linux and Mac"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -23,16 +23,21 @@ jobs:
 
           echo "QISKIT_CEXT_VERSION=$QISKIT_CEXT_VERSION" >> $GITHUB_ENV
           echo "QISKIT_CEXT_DIR=$QISKIT_CEXT_DIR" >> $GITHUB_ENV
+          echo "MACOS_ARM64_DIR=${QISKIT_CEXT_DIR}-macos-arm64" >> $GITHUB_ENV
+          echo "LINUX_AMD64_DIR=${QISKIT_CEXT_DIR}-linux-amd64" >> $GITHUB_ENV
       - name: Build Binary
         run: make c
-      - name: Archive Binary
+      - name: Archive Binaries
         run: |
-          mkdir ${{ env.QISKIT_CEXT_DIR }}
-          mv dist ${{ env.QISKIT_CEXT_DIR }}
-          tar czf ${{ env.QISKIT_CEXT_DIR }}.tar.gz ${{ env.QISKIT_CEXT_DIR }}
+          cp dist/c/lib/libqiskit.so dist/c/lib/libqiskit.dylib
+          mkdir ${{ env.MACOS_ARM64_DIR }} ${{ env.LINUX_AMD64_DIR }}
+          cp -r dist ${{ env.MACOS_ARM64_DIR }}
+          cp -r dist ${{ env.LINUX_AMD64_DIR }}
+          tar czf ${{ env.LINUX_AMD64_DIR }}.tar.gz ${{ env.LINUX_AMD64_DIR }}
+          tar czf ${{ env.MACOS_ARM64_DIR }}.tar.gz ${{ env.MACOS_ARM64_DIR }}
       - name: Release
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
         with:
-          files: ${{ env.QISKIT_CEXT_DIR }}.tar.gz
+          files: *.tar.gz
           fail_on_unmatched_files: true
