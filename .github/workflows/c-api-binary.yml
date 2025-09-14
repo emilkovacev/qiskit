@@ -13,11 +13,10 @@ on:
           Describes the system this workflow should run on.
         type: string
         required: true
-
 jobs:
   c-api-binary-linux:
     name: "C API Binary / Linux and Mac"
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner }}
     steps:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
