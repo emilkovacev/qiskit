@@ -1,8 +1,8 @@
 name: Deploy release artifacts
 on:
   push:
-  #   tags:
-  #     - '*'
+    tags:
+      - '*'
 jobs:
   macos-c-api-bin:
     name: Build macos c-api binary
