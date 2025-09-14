@@ -15,4 +15,4 @@ jobs:
     uses: ./.github/workflows/ci-api-binary.yml
     with:
       release-suffix: "linux-amd64"
-      runner: "ubuntu-latest
+      runner: "ubuntu-latest"
