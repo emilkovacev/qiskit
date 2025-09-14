@@ -40,5 +40,6 @@ jobs:
         if: github.ref_type == 'tag'
         with:
           files: |
-            *.tar.gz
+            ${{ env.LINUX_AMD64_DIR }}.tar.gz
+            ${{ env.MACOS_ARM64_DIR }}.tar.gz
           fail_on_unmatched_files: true
