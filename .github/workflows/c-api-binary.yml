@@ -1,21 +1,11 @@
-name: Deploy C API Binaries
+name: Upload C API Binaries
 on:
-  workflow_call:
-    inputs:
-      release-suffix:
-        description: >
-          Suffix to add to the end of the release (e.g. macos-arm64)
-        type: string
-        required: true
-
-      runner:
-        description: >
-          Describes the system this workflow should run on.
-        type: string
-        required: true
+  push:
+    tags:
+      - '*'
 jobs:
   c-api-binary-linux:
-    runs-on: ${{ inputs.runner }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
@@ -28,7 +18,39 @@ jobs:
           QISKIT_CEXT_VERSION=$(
             cargo metadata --format-version=1 --no-deps | jq -r '.packages[] | select( .name == "qiskit-cext" ).version'
           )
-          QISKIT_CEXT_DIR="qiskit-c-$QISKIT_CEXT_VERSION-${{ inputs.release-suffix }}"
+          QISKIT_CEXT_DIR="qiskit-cext-${QISKIT_CEXT_VERSION}-linux-amd64"
+
+          echo "QISKIT_CEXT_VERSION=$QISKIT_CEXT_VERSION" >> $GITHUB_ENV
+          echo "QISKIT_CEXT_DIR=${QISKIT_CEXT_DIR}" >> $GITHUB_ENV
+      - name: Build Binary
+        run: make c
+      - name: Archive Binaries
+        run: |
+          mkdir ${{ env.QISKIT_CEXT_DIR }}
+          mv dist ${{ env.QISKIT_CEXT_DIR }}
+          tar czf ${{ env.QISKIT_CEXT_DIR }}.tar.gz ${{ env.QISKIT_CEXT_DIR }}
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          files: |
+            ${{ env.QISKIT_CEXT_DIR }}.tar.gz
+          fail_on_unmatched_files: true
+  c-api-binary-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install cbindgen
+        run: |
+          cargo install cbindgen
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - name: Set Environment Variables
+        run: |
+          QISKIT_CEXT_VERSION=$(
+            cargo metadata --format-version=1 --no-deps | jq -r '.packages[] | select( .name == "qiskit-cext" ).version'
+          )
+          QISKIT_CEXT_DIR="qiskit-c-${QISKIT_CEXT_VERSION}-macos-arm64"
 
           echo "QISKIT_CEXT_VERSION=$QISKIT_CEXT_VERSION" >> $GITHUB_ENV
           echo "QISKIT_CEXT_DIR=${QISKIT_CEXT_DIR}" >> $GITHUB_ENV
