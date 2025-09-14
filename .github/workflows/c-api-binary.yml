@@ -1,8 +1,38 @@
-name: Deploy C API Binaries
+name: Deploy release artifacts
 on:
   push:
     tags:
-      - "*.*.*"
+      - '*'
+jobs:
+  macos-c-api-bin:
+    name: Build macos c-api binary
+    uses: ./.github/workflows/ci-api-binary.yml
+    with:
+      release-suffix: "macos-arm64"
+      runner: "macos-latest"
+  linux-c-api-bin:
+    name: Build linux c-api binary
+    uses: ./.github/workflows/ci-api-binary.yml
+    with:
+      release-suffix: "linux-amd64"
+      runner: "ubuntu-latest"
+---
+name: Deploy C API Binaries
+on:
+  workflow_call:
+    inputs:
+      release-suffix:
+        description: >
+          Suffix to add to the end of the release (e.g. macos-arm64)
+        type: string
+        required: true
+
+      runner:
+        description: >
+          Describes the system this workflow should run on.
+        type: string
+        required: true
+
 jobs:
   c-api-binary-linux:
     name: "C API Binary / Linux and Mac"
@@ -14,32 +44,26 @@ jobs:
         run: |
           cargo install cbindgen
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
-      - name: Calculate Version
+      - name: Set Environment Variables
         run: |
           QISKIT_CEXT_VERSION=$(
             cargo metadata --format-version=1 --no-deps | jq -r '.packages[] | select( .name == "qiskit-cext" ).version'
           )
-          QISKIT_CEXT_DIR="qiskit-c-$QISKIT_CEXT_VERSION"
+          QISKIT_CEXT_DIR="qiskit-c-$QISKIT_CEXT_VERSION-${{ inputs.release-suffix }}"
 
           echo "QISKIT_CEXT_VERSION=$QISKIT_CEXT_VERSION" >> $GITHUB_ENV
-          echo "QISKIT_CEXT_DIR=$QISKIT_CEXT_DIR" >> $GITHUB_ENV
-          echo "MACOS_ARM64_DIR=${QISKIT_CEXT_DIR}-macos-arm64" >> $GITHUB_ENV
-          echo "LINUX_AMD64_DIR=${QISKIT_CEXT_DIR}-linux-amd64" >> $GITHUB_ENV
+          echo "QISKIT_CEXT_DIR=${QISKIT_CEXT_DIR}" >> $GITHUB_ENV
       - name: Build Binary
         run: make c
       - name: Archive Binaries
         run: |
-          cp dist/c/lib/libqiskit.so dist/c/lib/libqiskit.dylib
-          mkdir ${{ env.MACOS_ARM64_DIR }} ${{ env.LINUX_AMD64_DIR }}
-          cp -r dist ${{ env.MACOS_ARM64_DIR }}
-          cp -r dist ${{ env.LINUX_AMD64_DIR }}
-          tar czf ${{ env.LINUX_AMD64_DIR }}.tar.gz ${{ env.LINUX_AMD64_DIR }}
-          tar czf ${{ env.MACOS_ARM64_DIR }}.tar.gz ${{ env.MACOS_ARM64_DIR }}
+          mkdir ${{ env.QISKIT_CEXT_DIR }}
+          mv dist ${{ env.QISKIT_CEXT_DIR }}
+          tar czf ${{ env.QISKIT_CEXT_DIR }}.tar.gz ${{ env.QISKIT_CEXT_DIR }}
       - name: Release
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
         with:
           files: |
-            ${{ env.LINUX_AMD64_DIR }}.tar.gz
-            ${{ env.MACOS_ARM64_DIR }}.tar.gz
+            ${{ env.QISKIT_CEXT_DIR }}.tar.gz
           fail_on_unmatched_files: true
