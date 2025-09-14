@@ -2,7 +2,7 @@ name: Deploy C API Binaries
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "*.*.*"
 jobs:
   c-api-binary-linux:
     name: "C API Binary / Linux and Mac"
