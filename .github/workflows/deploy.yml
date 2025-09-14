@@ -1,0 +1,18 @@
+name: Deploy release artifacts
+on:
+  push:
+    tags:
+      - '*'
+jobs:
+  macos-c-api-bin:
+    name: Build macos c-api binary
+    uses: ./.github/workflows/ci-api-binary.yml
+    with:
+      release-suffix: "macos-arm64"
+      runner: "macos-latest"
+  linux-c-api-bin:
+    name: Build linux c-api binary
+    uses: ./.github/workflows/ci-api-binary.yml
+    with:
+      release-suffix: "linux-amd64"
+      runner: "ubuntu-latest
