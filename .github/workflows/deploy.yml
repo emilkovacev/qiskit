@@ -6,7 +6,7 @@ on:
 jobs:
   macos-c-api-bin:
     name: Build macos c-api binary
-    uses: ./.github/workflows/ci-api-binary.yml
+    uses: ./.github/workflows/c-api-binary.yml
     with:
       release-suffix: "macos-arm64"
       runner: "macos-latest"
