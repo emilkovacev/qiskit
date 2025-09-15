@@ -26,7 +26,7 @@ jobs:
         run: |
           mkdir -p ${{ env.QISKIT_CEXT_DIR }}/dist/c/lib
           cargo rustc --release --crate-type cdylib -p qiskit-cext
-          cp target/release/libqiskit_cext.dylib ${{ env.QISKIT_CEXT_DIR }}/dist/c/lib/libqiskit.dylib
+          cp target/release/libqiskit_cext.so ${{ env.QISKIT_CEXT_DIR }}/dist/c/lib/libqiskit.so
           mkdir -p ${{ env.QISKIT_CEXT_DIR }}/dist/c/include
           mkdir ${{ env.QISKIT_CEXT_DIR }}/dist/c/include/qiskit
           cp target/qiskit.h ${{ env.QISKIT_CEXT_DIR }}/dist/c/include/qiskit.h
