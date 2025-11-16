@@ -136,7 +136,7 @@ jobs:
           mkdir -p payload/usr/local/lib
           mv ${{ env.C_DIR_OUT }}/lib/* payload/usr/local/lib
           mv ${{ env.C_DIR_OUT }}/include/* payload/usr/local/include
-          pkgbuild --root ./payload --identifier "com.ibm.qiskit" --version "${{ env.GITHUB_REF_NAME }}" --install-location "/" ./Qiskit.pkg
+          pkgbuild --root ./payload --identifier "com.ibm.qiskit" --version "0.1.0" --install-location "/" ./Qiskit.pkg
       - name: Release
         run: |
           PACKAGE="./Qiskit.pkg"
